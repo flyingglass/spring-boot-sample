@@ -1,6 +1,7 @@
 package com.github.flyingglass.distributed;
 
 import com.baomidou.mybatisplus.core.toolkit.Sequence;
+import com.github.flyingglass.distributed.lock.RedisSampleLock;
 import lombok.extern.slf4j.Slf4j;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
@@ -8,7 +9,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
+import javax.annotation.Resource;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +20,9 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.Alphanumeric.class)
 class SpringDistributedSampleApplicationTests {
+
+    @Resource
+    StringRedisTemplate stringRedisTemplate;
 
     @Test
     void contextLoads() {
@@ -61,6 +67,8 @@ class SpringDistributedSampleApplicationTests {
 
     @Test
     void a02_redis_distributed_lock() {
-
+        // TODO 测试不通过，直接使用redisson
+        RedisSampleLock lock = new RedisSampleLock(stringRedisTemplate, "lock", 10000L);
+        log.info("{}", lock.tryLock());
     }
 }

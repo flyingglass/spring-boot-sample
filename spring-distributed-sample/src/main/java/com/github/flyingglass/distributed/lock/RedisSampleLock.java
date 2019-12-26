@@ -2,8 +2,11 @@ package com.github.flyingglass.distributed.lock;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisCommands;
+import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -133,6 +136,8 @@ public class RedisSampleLock implements Lock {
         return redisTemplate.execute((RedisCallback<String>) connection -> {
             Object nativeConnection = connection.getNativeConnection();
             String result = null;
+
+            // 全部用lua_script比较合理
             if (nativeConnection instanceof JedisCommands) {
                 result = ((JedisCommands) nativeConnection).set(key, value, new SetParams().nx().px(msec));
             }
