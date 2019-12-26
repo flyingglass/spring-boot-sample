@@ -1,7 +1,5 @@
 package com.github.flyingglass.aop.custom;
 
-import com.github.flyingglass.aop.custom.AnnotationTestExecutionInterceptor;
-import com.github.flyingglass.aop.custom.AopTest;
 import lombok.NonNull;
 import org.aopalliance.aop.Advice;
 import org.springframework.aop.Pointcut;

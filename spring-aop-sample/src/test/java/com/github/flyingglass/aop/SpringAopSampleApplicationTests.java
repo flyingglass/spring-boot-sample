@@ -16,7 +16,7 @@ class SpringAopSampleApplicationTests {
 
     @Test
     void a00_contextLoads() {
-        testBean.getName();
+        testBean.getTag();
     }
 
 }

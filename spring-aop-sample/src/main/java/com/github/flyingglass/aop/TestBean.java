@@ -15,5 +15,5 @@ import org.springframework.stereotype.Component;
 @AopTest("test")
 public class TestBean {
 
-    private String name = "Test!";
+    private String tag = "Test!";
 }
