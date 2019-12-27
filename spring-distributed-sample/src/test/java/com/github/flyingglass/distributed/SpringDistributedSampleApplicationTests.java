@@ -1,6 +1,7 @@
 package com.github.flyingglass.distributed;
 
 import com.baomidou.mybatisplus.core.toolkit.Sequence;
+import com.github.flyingglass.distributed.chash.ConsistentHash;
 import com.github.flyingglass.distributed.lock.RedisSampleLock;
 import lombok.extern.slf4j.Slf4j;
 import orestes.bloomfilter.BloomFilter;
@@ -52,7 +53,7 @@ class SpringDistributedSampleApplicationTests {
     }
 
     @Test
-    void a01_bloomFilter() {
+    void a01_00_bloomFilter() {
 //        布隆过滤器
 
         BloomFilter<String> bf = new FilterBuilder(1000, 0.1).buildBloomFilter();
@@ -72,7 +73,7 @@ class SpringDistributedSampleApplicationTests {
     }
 
     @Test
-    void a02_redisBloomFilter() {
+    void a01_01_redisBloomFilter() {
 //        Redis布隆过滤器
         FilterBuilder builder = new FilterBuilder(1000, 0.1)
                 .redisHost(redisProperties.getHost())
@@ -96,9 +97,17 @@ class SpringDistributedSampleApplicationTests {
     }
 
     @Test
-    void a03_redisDistributedLock() {
+    void a02_redisDistributedLock() {
         // TODO 测试不通过，直接使用redisson
         RedisSampleLock lock = new RedisSampleLock(stringRedisTemplate, "lock", 10000L);
         log.info("{}", lock.tryLock());
+    }
+
+
+    @Test
+    void a03_noConsistentHash() {
+
+      ConsistentHash.testConsistentHash();
+
     }
 }
