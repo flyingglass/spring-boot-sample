@@ -119,7 +119,6 @@ public class ConsistentHash {
     }
 
     public static void testConsistentHash() {
-
         NoConsistentHashNodeArray nodeArray = new NoConsistentHashNodeArray();
 
         Node[] nodes = {
