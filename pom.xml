@@ -21,7 +21,10 @@
     </properties>
 
     <modules>
+        <module>mybatis-plus-sample</module>
         <module>spring-aop-sample</module>
+        <module>spring-distributed-sample</module>
+        <module>spring-netty-sample</module>
     </modules>
 
     <dependencies>
