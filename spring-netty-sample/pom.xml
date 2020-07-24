@@ -40,6 +40,12 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.29</version>
         </dependency>
+
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>affinity</artifactId>
+            <version>3.0.6</version>
+        </dependency>
     </dependencies>
 
     <build>

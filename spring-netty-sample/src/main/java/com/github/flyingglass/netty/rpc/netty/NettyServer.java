@@ -8,20 +8,35 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import net.openhft.affinity.AffinityStrategies;
+import net.openhft.affinity.AffinityThreadFactory;
+
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author: fly
  * Created date: 2019/12/27 15:56
  */
 public class NettyServer {
+    private static final int CPUS = Math.max(2, Runtime.getRuntime().availableProcessors());
+
     public static void startServer(String host, int port) {
         startServer0(host, port);
     }
 
     private static void startServer0(String host, int port) {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup();
-        bootstrap.group(nioEventLoopGroup)
+        NioEventLoopGroup acceptorGroup = new NioEventLoopGroup(1);
+        // From https://github.com/netty/netty/wiki/Thread-Affinity
+        ThreadFactory threadFactory = new AffinityThreadFactory(
+                "ServerAffinityThreadFactory",
+                AffinityStrategies.DIFFERENT_CORE
+        );
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup(
+                2 * CPUS, threadFactory
+        );
+
+        bootstrap.group(acceptorGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
