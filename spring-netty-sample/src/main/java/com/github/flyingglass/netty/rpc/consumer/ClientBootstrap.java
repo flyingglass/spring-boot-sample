@@ -19,7 +19,7 @@ public class ClientBootstrap {
         HelloService service = (HelloService) consumer.createProxy(HelloService.class, providerName);
 
         for (;;) {
-            Thread.sleep(1000);
+            Thread.sleep(1000L);
             log.info(service.hello("are you ok ?"));
         }
     }
