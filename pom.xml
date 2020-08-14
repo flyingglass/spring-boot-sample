@@ -25,6 +25,7 @@
         <module>spring-aop-sample</module>
         <module>spring-distributed-sample</module>
         <module>spring-netty-sample</module>
+        <module>spring-kafka-sample</module>
     </modules>
 
     <dependencies>

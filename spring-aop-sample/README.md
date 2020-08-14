@@ -6,7 +6,7 @@ spring aop:
         - Advice
         - Proxy
             - 静态代理
-            - 动态代理: Standard, CGLib
+            - 动态代理: JDK(interface), CGLib(class)
     2. AutoProxyCreator
         - BeanNameAutoProxyCreator
         - DefaultAdvisorAutoProxyCreator
