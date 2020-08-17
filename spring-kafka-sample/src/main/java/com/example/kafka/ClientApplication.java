@@ -40,11 +40,6 @@ public class ClientApplication {
         String topic = env.getProperty("kafka.topic");
         String host = env.getProperty("kafka.host");
 
-        Map<String, Object> map = new HashMap<>(4);
-        map.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, host);
-        map.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        map.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        map.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         ThreadPoolExecutor executor = KafkaUtils.createThreadPoolExecutor(
                 ClientApplication.class.getCanonicalName(),
@@ -54,7 +49,13 @@ public class ClientApplication {
 
         for (int i = 0; i < 10; i++) {
             executor.submit(() -> {
+                Map<String, Object> map = new HashMap<>(4);
+                map.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, host);
+                map.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+                map.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+                map.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
                 map.put(ConsumerConfig.GROUP_ID_CONFIG, topic + "-" + UUID.randomUUID().toString());
+                log.info(map.get(ConsumerConfig.GROUP_ID_CONFIG).toString());
                 Consumer<String, String> consumer = new KafkaConsumer<String, String>(map);
                 int partitionIdx = getPartitionIndex(consumer, topic, host);
                 TopicPartition partition = new TopicPartition(topic, partitionIdx);
