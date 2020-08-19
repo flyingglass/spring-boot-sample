@@ -1,13 +1,17 @@
 package com.example.kafka;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 
-import java.util.Random;
-import java.util.concurrent.*;
+import java.util.Properties;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author ly
@@ -17,47 +21,55 @@ import java.util.concurrent.*;
 @SpringBootApplication
 public class ServerApplication {
 
+    static final int CPUS = Runtime.getRuntime().availableProcessors();
+
+
     @SuppressWarnings("AlibabaThreadPoolCreation")
     public static void main(String[] args) {
         System.setProperty("spring.profiles.active", "server");
 
         ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
 
-        String topic = context.getEnvironment().getProperty("kafka.topic");
 
-        StringKafkaTemplate kafkaTemplate = context.getBean(StringKafkaTemplate.class);
+        Environment env = context.getEnvironment();
+        String topic = env.getProperty("kafka.topic");
+        String host = env.getProperty("kafka.host");
 
-        final KafkaRequest request = new KafkaRequest();
-        request.setInterfaze(ServerApplication.class.getCanonicalName());
-        request.setAsync(true);
-        request.setMethod("server main");
-
-        log.info(request.toString());
 
         ThreadPoolExecutor executor = KafkaUtils.createThreadPoolExecutor(
-                ServerApplication.class.getCanonicalName(),
-                2*12, 2*12*2, 15*60*1000, false
+                ClientApplication.class.getCanonicalName(),
+                CPUS * 2 * 4, CPUS * 2 * 8,
+                15 * 60 * 1000, false
         );
 
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        final KafkaRequest request = new KafkaRequest();
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, host);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 64*1024*1024);
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16*1024);
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 50);
+        KafkaProducer<String, String> producer = new KafkaProducer<>(props);
 
-        service.scheduleAtFixedRate(
-                () -> executor.submit(() -> {
-                    log.info("发送内容：{}", request.toString());
-                    kafkaTemplate.send(new ProducerRecord<>(topic, request.getMessageId(), request.toString()))
-                            .addCallback(
-                                    (result) -> {
-                                        log.info("发送成功======\n {}", result.toString());
-                                    },
-                                    (ex) -> {
-                                        log.info("发送失败========\n 发送内容:{}\n 异常信息:{} ", request.toString(), ex.getMessage());
-                                    }
-                            );
-                }),
-                100L,
-                (int) (Math.random() * 50),
-                TimeUnit.MILLISECONDS
-        );
+        // 单Producer多线程
+        for (int i = 0; i < 12; i++) {
+            executor.execute(()-> {
+                while (true) {
+                    producer.send(
+                            new ProducerRecord<>(topic, request.getMessageId(), request.toString()),
+                            (r, e) -> {
+                                if (e == null) {
+//                                    log.info("发送成功======\n 发送内容:{}\n 发送结果:{}", request.toString(), r.toString());
+                                } else {
+                                    log.info("发送失败========\n 发送内容:{}\n 异常信息:{} ", r.toString(), e.getMessage());
+                                }
+                            }
+                    );
+                }
+            });
+        }
+
     }
 
 }

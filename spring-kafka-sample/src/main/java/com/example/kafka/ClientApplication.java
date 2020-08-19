@@ -10,15 +10,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author ly
@@ -47,30 +44,38 @@ public class ClientApplication {
                 15 * 60 * 1000, false
         );
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 12; i++) {
             executor.submit(() -> {
-                Map<String, Object> map = new HashMap<>(4);
+                Properties map = new Properties();
                 map.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, host);
                 map.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-                map.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-                map.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+                map.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+                map.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
                 map.put(ConsumerConfig.GROUP_ID_CONFIG, topic + "-" + UUID.randomUUID().toString());
-                log.info(map.get(ConsumerConfig.GROUP_ID_CONFIG).toString());
-                Consumer<String, String> consumer = new KafkaConsumer<String, String>(map);
-                int partitionIdx = getPartitionIndex(consumer, topic, host);
-                TopicPartition partition = new TopicPartition(topic, partitionIdx);
-                consumer.assign(Arrays.asList(partition));
+                map.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 1024);
 
-                while (true) {
-                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100L));
-//                    log.info("开始消费");
-                    if (null != records && records.count() != 0) {
-                        for (ConsumerRecord<String, String> record: records){
-                            log.info(record.value());
-                            // 扔给客户端处理（Spring-Kafka采用KafkaListener Aop配合处理）
+//                consumer.subscribe(Arrays.asList(topic));
+//                int partitionIdx = getPartitionIndex(consumer, topic, host);
+//                log.info(String.valueOf(partitionIdx));
+//                TopicPartition partition = new TopicPartition(topic, partitionIdx);
+//                consumer.assign(Arrays.asList(partition));
+
+                Consumer<String, String> consumer = new KafkaConsumer<>( map );
+                consumer.subscribe(Arrays.asList(topic));
+                try {
+                    while (true) {
+                        ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100L));
+                        if (null != records && records.count() != 0) {
+                            for (ConsumerRecord<String, String> record: records){
+//                                log.info(record.value());
+                                // 扔给客户端处理（Spring-Kafka采用KafkaListener Aop配合处理）
+                            }
                         }
                     }
+                } finally {
+                    consumer.close();
                 }
+
 
             });
         }
