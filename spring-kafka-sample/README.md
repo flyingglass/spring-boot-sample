@@ -45,17 +45,28 @@
 
 Producer send的源码步骤：
 ```markdown
-1. 处理消息分区
+1. 处理消息分区(DefaultPartitioner默认分区处理器)
 2. 把消息放入RecordAccumulator
 3. 立即返回
-4. 后台Sender和IOThread线程处理真正的发送
+4. 后台Sender和IOThread线程处理真正的发送(NetworkClient处理)
 ```
 
 
 ##### Consumer
-- 调优参数设置
-- 源码分析
+1. 调优参数设置
+- fetch.min.bytes
+```markdown
+server发送到消费端的最小数据，若是不满足这个数值则会等待直到满足指定大小。默认为1表示立即接收。
+```
 
-##### 性能测试和调优
-- 生产者调优
 
+2. 源码分析
+
+Consumer poll的源码步骤:
+```markdown
+1. 在Timeout时间内，循环从Fetcher获取消息
+2. 有消息立即返回
+3. 处理消息分区(ConsumerPartitionAssignor按分区策略处理)
+4. Fetcher处理真正的消息拉取(ConsumerNetworkClient处理)
+
+```
