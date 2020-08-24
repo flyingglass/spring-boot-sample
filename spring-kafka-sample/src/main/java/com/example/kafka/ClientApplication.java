@@ -2,7 +2,6 @@ package com.example.kafka;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Utils;
@@ -13,6 +12,7 @@ import org.springframework.core.env.Environment;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -61,7 +61,7 @@ public class ClientApplication {
 //                consumer.assign(Arrays.asList(partition));
 
                 Consumer<String, String> consumer = new KafkaConsumer<>( map );
-                consumer.subscribe(Arrays.asList(topic));
+                consumer.subscribe(Collections.singletonList(topic));
                 try {
                     while (true) {
                         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100L));
