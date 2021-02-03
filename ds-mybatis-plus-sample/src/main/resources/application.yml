@@ -1,0 +1,100 @@
+master_1:
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: root
+  schema: test
+
+slave_1:
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: root
+  schema: test
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    druid:
+      stat-view-servlet:
+        enabled: true
+        reset-enable: true
+        url-pattern: /druid/*
+        allow:
+        deny:
+      web-stat-filter:
+        enabled: true
+        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+        profile-enable: true
+        session-stat-enable: false
+
+    dynamic:
+      # 全局配置，数据源可覆盖
+      druid:
+        initial-size: 5 # 初始连接数
+        max-active: 20 # 最大连接池数量
+        min-idle: 5 # 最小连接池数量
+        max-wait: 60000 # 获取连接超时
+        validation-query: "SELECT 1"
+        test-on-borrow: false
+        test-on-return: false
+        test-while-idle: true # 开启定时检查
+        time-between-eviction-runs-millis: 60000 # 定时检查间隔
+        min-evictable-idle-time-millis: 60000 # 最小过期时间
+        connection-error-retry-attempts: 1 # 错误重连次数
+        time-between-connect-error-millis: 500 # 重连间隔
+        breakAfterAcquireFailure: false # 重连失败是否放弃
+
+        # Filter
+        # wall不兼容phoenix
+        filters: stat
+        stat:
+          log-slow-sql: true
+          slow-sql-millis: 5000
+          merge-sql: true
+      health: true
+#      auto-master-slave: true
+      datasource:
+        master_1:
+          username: ${master_1.username}
+          password: ${master_1.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${master_1.host}:${master_1.port}/${master_1.schema}?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+#          druid:
+#            break-after-acquire-failure: true
+
+        slave_1:
+          username: ${slave_1.username}
+          password: ${slave_1.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${slave_1.host}:${slave_1.port}/${slave_1.schema}?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+#          druid:
+#            break-after-acquire-failure: true
+
+  # 定时器
+  task:
+    scheduling:
+      thread-name-prefix: schedule-pool-
+      pool:
+        size: 20
+
+mybatis-plus:
+  # classpath要加上后面的*，表示通配符，匹配任意路径
+  mapper-locations: classpath*:/mapper/*Mapper.xml
+  typeAliasesPackage: com.github.flyingglass.mybatisplus.entity
+  configuration:
+    map-underscore-to-camel-case: true
+#    cache-enabled: true # 开启xml缓存
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    interceptors:
+
+  global-config:
+    db-config:
+      id-type: auto
+server:
+  port: 8000
+
+logging:
+  level:
+    com.baomidou.dynamic: debug
